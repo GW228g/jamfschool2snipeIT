@@ -1,0 +1,54 @@
+jamf_school:
+  url: https://yourschool.jamfcloud.com
+  network_id: "12345"
+  api_key: your-jamf-school-api-key
+
+snipe_it:
+  url: https://snipe.example.org
+  api_key: your-snipe-it-api-key
+  manufacturer_id: 1
+  default_status_id: 2
+  category_id: 3
+  fieldset_id: 0
+
+sync:
+  dry_run: false
+  force: false
+  rate_limit: true
+  update_only: false
+  set_name: true
+  device_types:
+    - computer
+    - tablet
+  location_sync:
+    enabled: true
+    auto_create: true
+    mapping:
+      "1": 10
+      lower-school: 11
+  user_assignment:
+    enabled: false
+    match_on: auto
+    device_sources:
+      - notes
+      - name
+    require_jamf_user: true
+  field_mapping:
+    _snipeit_udid_1: udid
+    _snipeit_last_checkin_2: last_checkin
+    _snipeit_model_identifier_3: model_identifier
+    _snipeit_model_type_4: model_type
+    _snipeit_os_name_5: os_name
+    _snipeit_os_version_6: os_version
+    _snipeit_managed_7: managed
+    _snipeit_supervised_8: supervised
+    _snipeit_battery_level_9: battery_level
+    _snipeit_total_capacity_10: total_capacity
+    _snipeit_location_name_11: location_name
+    _snipeit_user_match_12: matched_user
+    asset_tag: asset_tag
+
+log:
+  level: info
+  format: text
+  file: ""
