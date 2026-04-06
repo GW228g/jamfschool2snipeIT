@@ -25,7 +25,7 @@ sync:
     auto_create: true
     mapping:
       "1": 10
-      lower-school: 11
+      "lower-school": 11
   beta_user_assignment:
     beta: false
     enabled: false

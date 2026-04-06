@@ -43,6 +43,32 @@ Environment variables can override the core secrets:
 - `SNIPEIT_URL`
 - `SNIPEIT_API_KEY`
 
+## Security
+
+### Credentials
+
+The `settings.yaml` file may contain API keys in plaintext. Never commit it to version control; it is ignored by `.gitignore` for this reason.
+
+For production and CI use, prefer environment variables over the YAML file:
+
+| Variable | Overrides |
+| --- | --- |
+| `JAMFSCHOOL_URL` | `jamf_school.url` |
+| `JAMFSCHOOL_NETWORK_ID` | `jamf_school.network_id` |
+| `JAMFSCHOOL_API_KEY` | `jamf_school.api_key` |
+| `SNIPEIT_URL` | `snipe_it.url` |
+| `SNIPEIT_API_KEY` | `snipe_it.api_key` |
+
+In CI pipelines, inject these as masked secret environment variables rather than checking in a `settings.yaml`.
+
+### HTTPS Enforcement
+
+Both `jamf_school.url` and `snipe_it.url` must use `https://`. The tool refuses to start if either is configured with plain HTTP, preventing accidental credential exposure.
+
+### Beta User Assignment
+
+The `beta_user_assignment` feature is heuristic and intentionally requires two opt-in flags: `beta: true` and `enabled: true`. Every match and non-match decision is logged at WARN level so you can audit what the tool did after a sync.
+
 ## Field Mapping Sources
 
 These source keys are supported under `sync.field_mapping`:
@@ -69,7 +95,7 @@ These source keys are supported under `sync.field_mapping`:
 
 ## User Assignment
 
-JAMF School device records in this SDK do not expose a direct assigned-user field, so user assignment is intentionally treated as a beta feature. When enabled, the tool extracts identifiers from configured device fields such as `notes` or `name`, confirms them against the JAMF School user directory if `require_jamf_user` is enabled, and then matches them against Snipe-IT users by email, username, or both.
+JAMF School device records in this SDK do not expose a direct assigned-user field, so user assignment is intentionally treated as a beta feature. When enabled, the tool extracts identifiers from configured device fields, defaults to `notes`, confirms them against the JAMF School user directory if `require_jamf_user` is enabled, and then matches them against Snipe-IT users by email, username, or both.
 
 To enable it, both of these must be set:
 

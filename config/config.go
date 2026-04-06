@@ -1,7 +1,9 @@
 package config
 
 import (
+	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -101,46 +103,74 @@ func Load(path string) (*Config, error) {
 }
 
 func (c *Config) Validate() error {
+	var errs []string
+
 	if err := c.ValidateJAMFSchool(); err != nil {
-		return err
+		errs = append(errs, err.Error())
 	}
 	if err := c.ValidateSnipeIT(); err != nil {
-		return err
+		errs = append(errs, err.Error())
 	}
 	if c.Sync.BetaUserAssignment.Enabled && !c.Sync.BetaUserAssignment.Beta {
-		return fmt.Errorf("sync.beta_user_assignment.enabled requires sync.beta_user_assignment.beta=true because user assignment is a beta heuristic feature")
+		errs = append(errs, "sync.beta_user_assignment.enabled is true but beta is false - set beta: true to acknowledge this is a heuristic feature")
+	}
+	if len(errs) > 0 {
+		return errors.New("configuration errors:\n  - " + strings.Join(errs, "\n  - "))
 	}
 	return nil
 }
 
 func (c *Config) ValidateJAMFSchool() error {
+	var errs []string
 	if c.JAMFSchool.URL == "" {
-		return fmt.Errorf("jamf_school.url is required")
+		errs = append(errs, "jamf_school.url is required (or set JAMFSCHOOL_URL)")
+	} else if err := validateHTTPS(c.JAMFSchool.URL, "jamf_school.url"); err != nil {
+		errs = append(errs, err.Error())
 	}
 	if c.JAMFSchool.NetworkID == "" {
-		return fmt.Errorf("jamf_school.network_id is required")
+		errs = append(errs, "jamf_school.network_id is required (or set JAMFSCHOOL_NETWORK_ID)")
 	}
-	if c.JAMFSchool.APIKey == "" {
-		return fmt.Errorf("jamf_school.api_key is required")
+	if c.JAMFSchool.APIKey == "" || c.JAMFSchool.APIKey == "your-jamf-school-api-key" {
+		errs = append(errs, "jamf_school.api_key is required (or set JAMFSCHOOL_API_KEY)")
+	}
+	if len(errs) > 0 {
+		return errors.New(strings.Join(errs, "; "))
 	}
 	return nil
 }
 
 func (c *Config) ValidateSnipeIT() error {
+	var errs []string
 	if c.SnipeIT.URL == "" {
-		return fmt.Errorf("snipe_it.url is required")
+		errs = append(errs, "snipe_it.url is required (or set SNIPEIT_URL)")
+	} else if err := validateHTTPS(c.SnipeIT.URL, "snipe_it.url"); err != nil {
+		errs = append(errs, err.Error())
 	}
-	if c.SnipeIT.APIKey == "" {
-		return fmt.Errorf("snipe_it.api_key is required")
+	if c.SnipeIT.APIKey == "" || c.SnipeIT.APIKey == "your-snipe-it-api-key" {
+		errs = append(errs, "snipe_it.api_key is required (or set SNIPEIT_API_KEY)")
 	}
-	if c.SnipeIT.ManufacturerID == 0 {
-		return fmt.Errorf("snipe_it.manufacturer_id is required")
+	if c.SnipeIT.ManufacturerID <= 0 {
+		errs = append(errs, "snipe_it.manufacturer_id must be a positive integer")
 	}
-	if c.SnipeIT.DefaultStatusID == 0 {
-		return fmt.Errorf("snipe_it.default_status_id is required")
+	if c.SnipeIT.DefaultStatusID <= 0 {
+		errs = append(errs, "snipe_it.default_status_id must be a positive integer")
 	}
-	if c.SnipeIT.CategoryID == 0 {
-		return fmt.Errorf("snipe_it.category_id is required")
+	if c.SnipeIT.CategoryID <= 0 {
+		errs = append(errs, "snipe_it.category_id must be a positive integer")
+	}
+	if len(errs) > 0 {
+		return errors.New(strings.Join(errs, "; "))
+	}
+	return nil
+}
+
+func validateHTTPS(rawURL, field string) error {
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return fmt.Errorf("%s is not a valid URL: %w", field, err)
+	}
+	if u.Scheme != "https" {
+		return fmt.Errorf("%s must use https (got %q) - credentials must not be sent over plain HTTP", field, u.Scheme)
 	}
 	return nil
 }
