@@ -32,15 +32,15 @@ type SnipeITConfig struct {
 }
 
 type SyncConfig struct {
-	DryRun         bool                 `yaml:"dry_run"`
-	Force          bool                 `yaml:"force"`
-	RateLimit      bool                 `yaml:"rate_limit"`
-	UpdateOnly     bool                 `yaml:"update_only"`
-	SetName        bool                 `yaml:"set_name"`
-	DeviceTypes    []string             `yaml:"device_types"`
-	FieldMapping   map[string]string    `yaml:"field_mapping"`
-	LocationSync   LocationSyncConfig   `yaml:"location_sync"`
-	UserAssignment UserAssignmentConfig `yaml:"user_assignment"`
+	DryRun             bool                 `yaml:"dry_run"`
+	Force              bool                 `yaml:"force"`
+	RateLimit          bool                 `yaml:"rate_limit"`
+	UpdateOnly         bool                 `yaml:"update_only"`
+	SetName            bool                 `yaml:"set_name"`
+	DeviceTypes        []string             `yaml:"device_types"`
+	FieldMapping       map[string]string    `yaml:"field_mapping"`
+	LocationSync       LocationSyncConfig   `yaml:"location_sync"`
+	BetaUserAssignment UserAssignmentConfig `yaml:"beta_user_assignment"`
 }
 
 type LocationSyncConfig struct {
@@ -50,6 +50,7 @@ type LocationSyncConfig struct {
 }
 
 type UserAssignmentConfig struct {
+	Beta            bool     `yaml:"beta"`
 	Enabled         bool     `yaml:"enabled"`
 	MatchOn         string   `yaml:"match_on"`
 	DeviceSources   []string `yaml:"device_sources"`
@@ -89,11 +90,11 @@ func Load(path string) (*Config, error) {
 		cfg.SnipeIT.APIKey = v
 	}
 
-	if cfg.Sync.UserAssignment.MatchOn == "" {
-		cfg.Sync.UserAssignment.MatchOn = "auto"
+	if cfg.Sync.BetaUserAssignment.MatchOn == "" {
+		cfg.Sync.BetaUserAssignment.MatchOn = "auto"
 	}
-	if len(cfg.Sync.UserAssignment.DeviceSources) == 0 {
-		cfg.Sync.UserAssignment.DeviceSources = []string{"notes", "name"}
+	if len(cfg.Sync.BetaUserAssignment.DeviceSources) == 0 {
+		cfg.Sync.BetaUserAssignment.DeviceSources = []string{"notes"}
 	}
 
 	return cfg, nil
@@ -105,6 +106,9 @@ func (c *Config) Validate() error {
 	}
 	if err := c.ValidateSnipeIT(); err != nil {
 		return err
+	}
+	if c.Sync.BetaUserAssignment.Enabled && !c.Sync.BetaUserAssignment.Beta {
+		return fmt.Errorf("sync.beta_user_assignment.enabled requires sync.beta_user_assignment.beta=true because user assignment is a beta heuristic feature")
 	}
 	return nil
 }

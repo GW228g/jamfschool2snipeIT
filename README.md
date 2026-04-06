@@ -13,7 +13,7 @@ The project is intentionally modeled after [`axm2snipe`](https://github.com/Camp
 - Update-only mode to avoid creating new assets or models
 - Create or update a reusable Snipe-IT custom fieldset mapping with `setup`
 - Sync JAMF School locations into Snipe-IT locations with optional auto-create
-- Optional user assignment heuristics backed by JAMF School and Snipe-IT user directories
+- Optional beta user-assignment heuristics backed by JAMF School and Snipe-IT user directories
 - Managed notes blocks that preserve manual notes while keeping sync metadata fresh
 - Release packaging via `goreleaser`
 
@@ -69,7 +69,18 @@ These source keys are supported under `sync.field_mapping`:
 
 ## User Assignment
 
-JAMF School device records in this SDK do not expose a direct assigned-user field, so user assignment is intentionally opt-in and heuristic-based. When enabled, the tool extracts identifiers from configured device fields such as `notes` or `name`, confirms them against the JAMF School user directory if `require_jamf_user` is enabled, and then matches them against Snipe-IT users by email, username, or both.
+JAMF School device records in this SDK do not expose a direct assigned-user field, so user assignment is intentionally treated as a beta feature. When enabled, the tool extracts identifiers from configured device fields such as `notes` or `name`, confirms them against the JAMF School user directory if `require_jamf_user` is enabled, and then matches them against Snipe-IT users by email, username, or both.
+
+To enable it, both of these must be set:
+
+```yaml
+sync:
+  beta_user_assignment:
+    beta: true
+    enabled: true
+```
+
+If `enabled: true` is set without `beta: true`, the tool will stop with a validation error instead of quietly turning on heuristic assignment. The default beta source is now just `notes` to reduce accidental matches from generic device names.
 
 ## Release
 

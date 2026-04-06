@@ -26,12 +26,12 @@ sync:
     mapping:
       "1": 10
       lower-school: 11
-  user_assignment:
+  beta_user_assignment:
+    beta: false
     enabled: false
     match_on: auto
     device_sources:
       - notes
-      - name
     require_jamf_user: true
   field_mapping:
     _snipeit_udid_1: udid

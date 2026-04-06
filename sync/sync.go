@@ -130,7 +130,8 @@ func (e *Engine) prepare(ctx context.Context) error {
 			return fmt.Errorf("loading locations: %w", err)
 		}
 	}
-	if e.cfg.Sync.UserAssignment.Enabled {
+	if e.cfg.Sync.BetaUserAssignment.Enabled {
+		log.Warn("User assignment beta is enabled. Assignments are heuristic-based because JAMF School device records do not expose a reliable direct assigned-user field in this SDK.")
 		if err := e.loadUsers(ctx); err != nil {
 			return fmt.Errorf("loading users: %w", err)
 		}
@@ -369,13 +370,13 @@ func (e *Engine) resolveLocation(ctx context.Context, device jamfschool.Device) 
 }
 
 func (e *Engine) resolveUser(device jamfschool.Device) (int, string) {
-	if !e.cfg.Sync.UserAssignment.Enabled {
+	if !e.cfg.Sync.BetaUserAssignment.Enabled {
 		return 0, ""
 	}
 
 	candidates := e.userCandidates(device)
 	for _, candidate := range candidates {
-		switch strings.ToLower(e.cfg.Sync.UserAssignment.MatchOn) {
+		switch strings.ToLower(e.cfg.Sync.BetaUserAssignment.MatchOn) {
 		case "email":
 			if id, ok := e.findUserByEmail(candidate); ok {
 				return id, candidate.Value
@@ -401,7 +402,7 @@ func (e *Engine) userCandidates(device jamfschool.Device) []assignmentCandidate 
 	seen := make(map[string]bool)
 	out := []assignmentCandidate{}
 
-	for _, source := range e.cfg.Sync.UserAssignment.DeviceSources {
+	for _, source := range e.cfg.Sync.BetaUserAssignment.DeviceSources {
 		for _, value := range extractIdentifiersFromDevice(device, source) {
 			key := strings.ToLower(value)
 			if value == "" || seen[key] {
@@ -419,7 +420,7 @@ func (e *Engine) userCandidates(device jamfschool.Device) []assignmentCandidate 
 				}
 			}
 
-			if e.cfg.Sync.UserAssignment.RequireJamfUser && candidate.User == nil {
+			if e.cfg.Sync.BetaUserAssignment.RequireJamfUser && candidate.User == nil {
 				continue
 			}
 			out = append(out, candidate)

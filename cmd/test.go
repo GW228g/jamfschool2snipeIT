@@ -48,7 +48,7 @@ func runTest(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if Cfg.Sync.UserAssignment.Enabled {
+	if Cfg.Sync.BetaUserAssignment.Enabled {
 		if _, err := snipeClient.ListAllUsers(ctx); err != nil {
 			return fmt.Errorf("testing Snipe-IT users: %w", err)
 		}
